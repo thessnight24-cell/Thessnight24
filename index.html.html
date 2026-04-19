@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0c14">
+    <title>NightLife24 - ELITE CMS ULTIMATE</title>
+
+    <!-- Leaflet + MarkerCluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            transition: background 0.2s, color 0.2s;
+            line-height: 1.5;
+            overflow-x: hidden;
+            max-width: 100vw;
+            padding-bottom: 70px; /* space for bottom nav */
+        }
+
+        :root {
+            --bg-body: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-main: #1a1a1a;
+            --text-dim: #666;
+            --accent: #007bff;
+            --border: #e0e0e0;
+            --shadow: rgba(0,0,0,0.08);
+            --header-bg: #ffffff;
+            --star: #ffcc00;
+            --success: #28a745;
+            --danger: #dc3545;
+            --vibe-chill: #2ecc71;
+            --vibe-wild: #e74c3c;
+            --vibe-date: #9b59b6;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0a0c14;
+            --bg-card: #161b2c;
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+            --accent: #00e6ff;
+            --border: rgba(0,230,255,0.15);
+            --shadow: rgba(0,0,0,0.4);
+            --header-bg: #0f1320;
+        }
+
+        /* Offline Banner */
+        #offlineBanner {
+            display: none;
+            background: var(--danger);
+            color: white;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 2000;
+        }
+
+        /* Header */
+        header {
+            background: var(--header-bg);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1100;
+            box-shadow: 0 2px 10px var(--shadow);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .stat-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border-radius: 30px;
+            border: 1px solid var(--border);
+        }
+        .hide-map-btn, .btn-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: var(--text-main);
+            transition: 0.2s;
+        }
+        .hide-map-btn:hover, .btn-icon:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-surprise {
+            background: linear-gradient(135deg, #ff00cc, #3333ff);
+            color: white !important;
+            border: none !important;
+            animation: glow 2s infinite;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px #ff00cc; }
+            50% { box-shadow: 0 0 15px #3333ff; }
+            100% { box-shadow: 0 0 5px #ff00cc; }
+        }
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 34px;
+            transition: .3s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s;
+        }
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Map */
+        #mapWrapper {
+            height: 35vh;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+            transition: height 0.3s ease, opacity 0.3s;
+        }
+        #mapWrapper.hidden {
+            height: 0;
+            opacity: 0;
+            border: none;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        .map-layers {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+        }
+        .layer-btn {
+            background: none;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 11px;
+            color: var(--text-main);
+        }
+        .layer-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Main Container (Explore view) */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 0.8fr;
+            gap: 12px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        input, select {
+            padding: 12px;
+            border-radius: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            width: 100%;
+        }
+        .search-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 0 15px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            height: 48px;
+        }
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Vibe Selector */
+        .vibe-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .vibe-btn {
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        .vibe-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 20px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .list-header h3 {
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+        .result-count {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            background: var(--bg-card);
+            border-radius: 30px;
+        }
+        #list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 14px;
+            display: flex;
+            gap: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 15px var(--shadow);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .hot-venue {
+            border: 2px solid var(--accent) !important;
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(0, 230, 255, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(0, 230, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 230, 255, 0); }
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        @keyframes cardShake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-1deg); }
+            75% { transform: translateX(5px) rotate(1deg); }
+            100% { transform: translateX(0); }
+        }
+        .shake-focus {
+            animation: cardShake 0.4s ease-in-out 2;
+        }
+        .card-img {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .card-img img {
+            width: 95px;
+            height: 95px;
+            border-radius: 16px;
+            object-fit: cover;
+        }
+        .cat-badge {
+            position: absolute;
+            bottom: -5px;
+            left: 5px;
+            background: var(--accent);
+            color: white;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 30px;
+            white-space: nowrap;
+        }
+        .vibe-badge {
+            position: absolute;
+            top: -5px;
+            right: 5px;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 30px;
+            text-transform: uppercase;
+            color: white;
+        }
+        .vibe-chill { background: var(--vibe-chill); }
+        .vibe-wild { background: var(--vibe-wild); }
+        .vibe-date { background: var(--vibe-date); }
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+        }
+        .venue-name {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 4px;
+            word-break: break-word;
+            padding-right: 45px;
+        }
+        .venue-meta {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        .hours-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .open-badge {
+            font-size: 0.65rem;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 700;
+        }
+        .open-badge.open {
+            background: var(--success);
+            color: #000;
+        }
+        .open-badge.closed {
+            background: var(--danger);
+            color: white;
+        }
+        .rating-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0;
+            flex-wrap: wrap;
+        }
+        .stars {
+            display: inline-flex;
+            gap: 3px;
+            cursor: pointer;
+        }
+        .star-filled {
+            color: var(--star);
+            font-size: 0.85rem;
+        }
+        .star-empty {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        .card-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .card-buttons button {
+            flex: 1 0 auto;
+            min-width: 70px;
+            padding: 7px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(0,230,255,0.05);
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .card-buttons button:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .fav-btn.active {
+            background: var(--star);
+            color: #000;
+            border-color: var(--star);
+        }
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--accent);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 30px;
+            z-index: 10000;
+            font-size: 13px;
+            animation: fadeUp 0.3s ease;
+            pointer-events: none;
+            max-width: 90vw;
+            text-align: center;
+            white-space: nowrap;
+        }
+        @media (max-width: 600px) {
+            .toast { white-space: normal; max-width: 85vw; }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-dim);
+        }
+        .skeleton {
+            background: var(--bg-card);
+            border-radius: 20px;
+            height: 125px;
+            border: 1px solid var(--border);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-card);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid var(--border);
+            z-index: 2000;
+        }
+        .nav-item {
+            color: var(--text-main);
+            opacity: 0.5;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            flex: 1;
+            transition: 0.2s;
+        }
+        .nav-item.active {
+            opacity: 1;
+            color: var(--accent);
+        }
+        .nav-item i {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* View management */
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+
+        /* Blog styling */
+        .blog-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .blog-card:hover {
+            transform: translateY(-3px);
+        }
+        .blog-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .blog-info {
+            padding: 15px;
+        }
+        .blog-info h3 {
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        /* Detail page */
+        .detail-header {
+            position: relative;
+            height: 250px;
+        }
+        .detail-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .content-padding {
+            padding: 20px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .gallery img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .detail-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .detail-stars {
+            display: inline-flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+<div id="offlineBanner"><i class="fas fa-plane"></i> ΛΕΙΤΟΥΡΓΙΑ OFFLINE (Εμφάνιση αποθηκευμένων δεδομένων)</div>
+
+<header>
+    <div class="logo"><i class="fas fa-gem"></i> NightLife24</div>
+    <div class="header-actions">
+        <button class="btn-surprise" id="surpriseBtn"><i class="fas fa-dice"></i> ΤΥΧΗ</button>
+        <span class="stat-badge" id="stats">0 venues</span>
+        <button class="hide-map-btn" id="hideMapBtn"><i class="fas fa-map"></i> <span id="mapToggleText">Απόκρυψη</span></button>
+        <div class="switch-wrapper">
+            <i class="fas fa-sun" style="font-size: 12px; color: #ffcc00"></i>
+            <label class="switch"><input type="checkbox" id="themeSwitch" checked><span class="slider"></span></label>
+            <i class="fas fa-moon" style="font-size: 12px; color: #00e6ff"></i>
+        </div>
+    </div>
+</header>
+
+<!-- EXPLORE VIEW -->
+<div id="view-explore" class="view active">
+    <div id="mapWrapper">
+        <div id="map"></div>
+        <div class="map-layers">
+            <button class="layer-btn active" data-layer="street">🗺️ Οδικός</button>
+            <button class="layer-btn" data-layer="satellite">🛰️ Δορυφόρος</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="vibe-selector" id="vibeSelector">
+            <button class="vibe-btn active" data-vibe="all">✨ Όλα τα vibes</button>
+            <button class="vibe-btn" data-vibe="chill"><i class="fas fa-leaf"></i> Chill</button>
+            <button class="vibe-btn" data-vibe="wild"><i class="fas fa-fire"></i> Wild</button>
+            <button class="vibe-btn" data-vibe="date"><i class="fas fa-wine-glass-alt"></i> Date</button>
+        </div>
+
+        <div class="filters-grid">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="🔍 Αναζήτηση venue...">
+                <button class="btn-icon" id="voiceBtn"><i class="fas fa-microphone"></i></button>
+                <button class="btn-icon" id="resetBtn"><i class="fas fa-eraser"></i></button>
+            </div>
+            <select id="catFilter">
+                <option value="all">📂 Όλες οι κατηγορίες</option>
+                <option value="Club">🎵 Clubs</option>
+                <option value="Bar">🍸 Bars</option>
+                <option value="Restaurant">🍽️ Εστιατόρια</option>
+                <option value="Bouzoukia">🎸 Μπουζούκια</option>
+                <option value="Hotel">🏨 Ξενοδοχεία</option>
+                <option value="Airbnb">🏠 Airbnb</option>
+                <option value="Live Music">🎤 Live Music</option>
+                <option value="Lounge">🍷 Lounge</option>
+            </select>
+            <select id="sortFilter">
+                <option value="none">⚡ Ταξινόμηση</option>
+                <option value="rating">⭐ Top Rated</option>
+                <option value="distance">📍 Κοντά μου</option>
+                <option value="name">🔤 Αλφαβητικά</option>
+            </select>
+            <div class="filter-group">
+                <label><input type="checkbox" id="openNowCheck"> <i class="fas fa-clock"></i> Open now</label>
+                <label><input type="checkbox" id="favoritesCheck"> <i class="fas fa-heart"></i> Αγαπημένα</label>
+            </div>
+        </div>
+
+        <div class="list-header">
+            <h3><i class="fas fa-fire"></i> HOT VENUES</h3>
+            <span class="result-count" id="resultCount">0 venues</span>
+        </div>
+        <div id="list">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>
+    </div>
+</div>
+
+<!-- BLOG VIEW -->
+<div id="view-blog" class="view">
+    <div class="container">
+        <h2 style="color: var(--accent); margin-bottom: 20px;"><i class="fas fa-newspaper"></i> NightLife News</h2>
+        <div id="blogPosts">Φόρτωση άρθρων...</div>
+    </div>
+</div>
+
+<!-- FAVORITES VIEW -->
+<div id="view-favorites" class="view">
+    <div class="container">
+        <h2 style="color: var(--accent); margin-bottom: 20px;"><i class="fas fa-heart"></i> Αγαπημένα Venues</h2>
+        <div id="favoritesList">Δεν υπάρχουν αγαπημένα venues</div>
+    </div>
+</div>
+
+<!-- DETAIL VIEW (hidden initially) -->
+<div id="view-detail" class="view">
+    <div id="venueDetailContent"></div>
+</div>
+
+<div class="fab" id="locateBtn"><i class="fas fa-location-dot fa-lg"></i></div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" data-view="explore"><i class="fas fa-map-marked-alt"></i>Χάρτης</div>
+    <div class="nav-item" data-view="blog"><i class="fas fa-newspaper"></i>Blog</div>
+    <div class="nav-item" data-view="favorites"><i class="fas fa-heart"></i>Αγαπημένα</div>
+</nav>
+
+<script>
+// ========== CONFIGURATION ==========
+const API_URL = "";  // Google Sheets JSON URL (9 στήλες + προαιρετική 10η "vibe")
+const BLOGSPOT_URL = "https://YOURBLOG.blogspot.com"; // Αλλάξτε με το blog σας
+const DISQUS_SHORTNAME = "nightlife24"; // Βάλτε το shortname από το Disqus
+
+const CACHE_KEY = "nightlife_ultimate_cms_data";
+
+// ========== GLOBAL STATE ==========
+let venues = [];
+let favorites = new Set(JSON.parse(localStorage.getItem("nightlife_favorites") || "[]"));
+let userRatings = JSON.parse(localStorage.getItem("nightlife_ratings") || "{}");
+let userLocation = null;
+let map, markers, currentTileLayer;
+let isMapVisible = true;
+let currentVibe = "all";
+let currentView = "explore";
+
+// ========== OFFLINE & CACHE ==========
+window.addEventListener('online', () => {
+    document.getElementById('offlineBanner').style.display = 'none';
+    showToast("📡 Σύνδεση αποκαταστάθηκε. Ανανέωση δεδομένων...");
+    fetchFreshData();
+    if (currentView === 'blog') loadBlogPosts();
+});
+window.addEventListener('offline', () => {
+    document.getElementById('offlineBanner').style.display = 'block';
+    showToast("⚠️ Χωρίς internet – προβολή αποθηκευμένων δεδομένων", true);
+});
+
+// ========== UTILITIES ==========
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+}
+
+function showToast(msg, isError = false) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+    t.style.background = isError ? 'rgba(220,53,69,0.95)' : 'rgba(0,0,0,0.85)';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+
+function getDistance(lat1, lng1, lat2, lng2) {
+    if (!map) return 0;
+    return map.distance([lat1, lng1], [lat2, lng2]) / 1000;
+}
+
+function isOpenNow(hours) {
+    if (!hours || hours === "24/7" || hours.includes("check-in")) return true;
+    const now = new Date();
+    const currentHour = now.getHours();
+    const parts = hours.split("-");
+    if (parts.length !== 2) return true;
+    const start = parseInt(parts[0]);
+    const end = parseInt(parts[1]);
+    if (isNaN(start) || isNaN(end)) return true;
+    if (end < start) return currentHour >= start || currentHour < end;
+    return currentHour >= start && currentHour < end;
+}
+
+function getVibeFromCategory(cat) {
+    const map = {
+        'Club': 'wild', 'Bouzoukia': 'wild',
+        'Bar': 'chill', 'Lounge': 'chill', 'Live Music': 'chill',
+        'Restaurant': 'date', 'Hotel': 'date', 'Airbnb': 'date'
+    };
+    return map[cat] || 'chill';
+}
+
+function getCategoryColor(cat) {
+    const colors = { 'Club': '#ff3366', 'Bar': '#ff9933', 'Restaurant': '#33ff66', 'Bouzoukia': '#ff00ff', 'Hotel': '#00aaff', 'Airbnb': '#00ffcc', 'Live Music': '#ffcc00', 'Lounge': '#9933ff' };
+    return colors[cat] || '#00e6ff';
+}
+function getCategoryIcon(cat) {
+    const icons = { 'Club': 'fa-music', 'Bar': 'fa-cocktail', 'Restaurant': 'fa-utensils', 'Bouzoukia': 'fa-guitar', 'Hotel': 'fa-hotel', 'Airbnb': 'fa-home', 'Live Music': 'fa-microphone-alt', 'Lounge': 'fa-wine-glass-alt' };
+    return icons[cat] || 'fa-star';
+}
+
+function getVenueRating(name, originalRating) {
+    return userRatings[name] || originalRating || 0;
+}
+function setVenueRating(name, rating) {
+    userRatings[name] = rating;
+    localStorage.setItem("nightlife_ratings", JSON.stringify(userRatings));
+    renderExplore();
+    showToast(`⭐ Βαθμολόγησες "${name}" με ${rating} αστέρια`);
+}
+function toggleFavorite(name) {
+    if (favorites.has(name)) {
+        favorites.delete(name);
+        showToast(`❌ Αφαιρέθηκε από αγαπημένα`);
+    } else {
+        favorites.add(name);
+        showToast(`⭐ Προστέθηκε στα αγαπημένα`);
+    }
+    localStorage.setItem("nightlife_favorites", JSON.stringify([...favorites]));
+    renderExplore();
+    renderFavorites();
+}
+
+function startNavigation(lat, lng) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const url = isIOS ? `maps://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, '_blank');
+}
+
+async function shareVenue(name, category, lat, lng) {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    if (navigator.share) {
+        try { await navigator.share({ title: name, text: `Πάμε για ${category} στο ${name}!`, url }); showToast(`✨ Κοινοποιήθηκε`); }
+        catch(e) { showToast(`⚠️ Ακυρώθηκε`, true); }
+    } else {
+        try { await navigator.clipboard.writeText(`${name} - ${category}\n📍 ${url}`); showToast(`📋 Αντιγράφηκε`); }
+        catch(e) { showToast(`⚠️ Αποτυχία`, true); }
+    }
+}
+function locateMe() {
+    if (!navigator.geolocation) return showToast("⚠️ Δεν υποστηρίζεται", true);
+    showToast("📍 Εντοπισμός...");
+    navigator.geolocation.getCurrentPosition(pos => {
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.setView([userLocation.lat, userLocation.lng], 14);
+        renderExplore();
+        showToast("📍 Θέση εντοπίστηκε");
+    }, () => showToast("⚠️ Αδυναμία εντοπισμού", true));
+}
+
+function surpriseVenue() {
+    if (!venues.length) { showToast("⚠️ Δεν υπάρχουν venues ακόμα", true); return; }
+    const random = venues[Math.floor(Math.random() * venues.length)];
+    map.setView([random.lat, random.lng], 16);
+    const card = document.querySelector(`.card[data-name="${random.name.replace(/"/g, '&quot;')}"]`);
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('shake-focus');
+        setTimeout(() => card.classList.remove('shake-focus'), 1000);
+    }
+    showToast(`🎲 Η τύχη επέλεξε: ${random.name}`);
+}
+
+// ========== MAP FUNCTIONS ==========
+function initMap() {
+    map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([37.9838, 23.7275], 13);
+    markers = L.markerClusterGroup({ maxClusterRadius: 50, chunkedLoading: true });
+    map.addLayer(markers);
+    initMapLayers();
+}
+function initMapLayers() {
+    const street = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+    const darkStreet = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+    const theme = document.body.getAttribute('data-theme') || 'dark';
+    currentTileLayer = theme === 'dark' ? darkStreet : street;
+    currentTileLayer.addTo(map);
+    document.querySelectorAll('.layer-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            map.removeLayer(currentTileLayer);
+            currentTileLayer = btn.dataset.layer === 'street' ? (theme === 'dark' ? darkStreet : street) : satellite;
+            currentTileLayer.addTo(map);
+        });
+    });
+}
+function updateMapTheme(theme) {
+    const activeLayer = document.querySelector('.layer-btn.active')?.dataset.layer || 'street';
+    if (activeLayer !== 'street') return;
+    map.removeLayer(currentTileLayer);
+    currentTileLayer = theme === 'dark' 
+        ? L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png')
+        : L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
+    currentTileLayer.addTo(map);
+}
+function toggleMapVisibility() {
+    const wrapper = document.getElementById('mapWrapper');
+    const btnText = document.getElementById('mapToggleText');
+    if (isMapVisible) {
+        wrapper.classList.add('hidden');
+        btnText.innerText = 'Εμφάνιση';
+        showToast('🗺️ Χάρτης αποκρύφθηκε');
+    } else {
+        wrapper.classList.remove('hidden');
+        btnText.innerText = 'Απόκρυψη';
+        setTimeout(() => map.invalidateSize(), 400);
+        showToast('🗺️ Χάρτης εμφανίστηκε');
+    }
+    isMapVisible = !isMapVisible;
+    localStorage.setItem('mapVisible', isMapVisible);
+}
+
+// ========== DATA LOADING (OFFLINE FIRST) ==========
+function loadFromCache() {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+        venues = JSON.parse(cached);
+        renderExplore();
+        document.getElementById('stats').innerHTML = `${venues.length} venues (cached)`;
+        showToast(`📀 Φορτώθηκαν ${venues.length} χώροι από cache`);
+    }
+}
+
+async function fetchFreshData() {
+    if (!API_URL) return;
+    try {
+        const res = await fetch(API_URL);
+        const text = await res.text();
+        const jsonMatch = text.match(/\((.*)\)/);
+        const json = jsonMatch ? JSON.parse(jsonMatch[1]) : JSON.parse(text);
+        
+        const freshData = json.table.rows.map(row => {
+            const cat = row.c[1]?.v || "Άλλο";
+            const rawVibe = row.c[9]?.v;
+            return {
+                name: row.c[0]?.v || "Άγνωστο",
+                cat: cat,
+                hours: row.c[2]?.v || "24/7",
+                lat: parseFloat(row.c[3]?.v),
+                lng: parseFloat(row.c[4]?.v),
+                img: row.c[5]?.v || "https://picsum.photos/id/104/200/200",
+                rating: parseFloat(row.c[6]?.v) || 0,
+                phone: row.c[7]?.v || "",
+                insta: row.c[8]?.v || "",
+                vibe: rawVibe ? rawVibe.toLowerCase() : getVibeFromCategory(cat)
+            };
+        }).filter(v => !isNaN(v.lat));
+        
+        if (freshData.length) {
+            venues = freshData;
+            localStorage.setItem(CACHE_KEY, JSON.stringify(venues));
+            renderExplore();
+            document.getElementById('stats').innerHTML = `${venues.length} venues`;
+            showToast(`✅ Ενημερώθηκαν ${venues.length} χώροι από δίκτυο`);
+        }
+    } catch(e) {
+        console.warn("Network error, using cached data", e);
+    }
+}
+
+async function loadData() {
+    loadFromCache();
+    if (API_URL) {
+        await fetchFreshData();
+    }
+}
+
+// ========== BLOG LOGIC (Blogger API) ==========
+async function loadBlogPosts() {
+    const container = document.getElementById('blogPosts');
+    if (!container) return;
+    try {
+        const res = await fetch(`${BLOGSPOT_URL}/feeds/posts/default?alt=json`);
+        const data = await res.json();
+        let html = '';
+        if (data.feed.entry) {
+            data.feed.entry.forEach(post => {
+                const title = post.title.$t;
+                const link = post.link.find(l => l.rel === 'alternate').href;
+                let img = 'https://picsum.photos/400/200';
+                if (post.media$thumbnail) {
+                    img = post.media$thumbnail.url.replace('s72-c', 's1600');
+                }
+                html += `
+                    <div class="blog-card" onclick="window.open('${link}', '_blank')">
+                        <img src="${img}" loading="lazy">
+                        <div class="blog-info">
+                            <h3>${escapeHtml(title)}</h3>
+                            <p style="font-size:12px; opacity:0.7">${new Date(post.published.$t).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html = '<div class="empty-state">Δεν βρέθηκαν άρθρα</div>';
+        }
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state">Αδυναμία φόρτωσης άρθρων. Βεβαιωθείτε ότι το Blog είναι δημόσιο.</div>';
+    }
+}
+
+// ========== FAVORITES VIEW ==========
+function renderFavorites() {
+    const container = document.getElementById('favoritesList');
+    if (!container) return;
+    const favVenues = venues.filter(v => favorites.has(v.name));
+    if (favVenues.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-heart-broken"></i><h3>Δεν υπάρχουν αγαπημένα venues</h3><p>Προσθέστε venues από τον χάρτη</p></div>';
+        return;
+    }
+    let html = '<div style="display:grid; gap:15px;">';
+    favVenues.forEach(v => {
+        html += `
+            <div class="card" onclick="openVenueDetail('${escapeHtml(v.name).replace(/'/g, "\\'")}')" style="cursor:pointer;">
+                <div class="card-img">
+                    <img src="${v.img}" loading="lazy" onerror="this.src='https://picsum.photos/id/104/200/200'">
+                    <div class="cat-badge" style="background:${getCategoryColor(v.cat)}">${v.cat}</div>
+                </div>
+                <div class="card-content">
+                    <div class="venue-name">${escapeHtml(v.name)}</div>
+                    <div class="venue-meta"><i class="fas ${getCategoryIcon(v.cat)}"></i> ${v.cat}</div>
+                    <div class="rating-area"><span>⭐ ${getVenueRating(v.name, v.rating).toFixed(1)}</span></div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ========== DETAIL VIEW WITH DISQUS COMMENTS ==========
+function openVenueDetail(venueName) {
+    const v = venues.find(ven => ven.name === venueName);
+    if (!v) return;
+    
+    const detailView = document.getElementById('view-detail');
+    const container = document.getElementById('venueDetailContent');
+    
+    // Hide all views, show detail
+    document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+    detailView.classList.add('active');
+    
+    const finalRating = getVenueRating(v.name, v.rating);
+    let starsHtml = '';
+    for (let i = 1; i <= 5; i++) {
+        const cls = i <= Math.round(finalRating) ? 'fas fa-star star-filled' : 'far fa-star star-empty';
+        starsHtml += `<i class="${cls}"></i>`;
+    }
+    
+    container.innerHTML = `
+        <div class="detail-header">
+            <button class="back-btn" onclick="goBackToExplore()"><i class="fas fa-arrow-left"></i></button>
+            <img src="${v.img}" onerror="this.src='https://picsum.photos/id/104/600/400'">
+        </div>
+        <div class="content-padding">
+            <h1 style="margin:0 0 5px 0">${escapeHtml(v.name)}</h1>
+            <p style="color:var(--accent); margin-bottom:10px;">${v.cat}</p>
+            <div class="detail-rating">
+                <div class="detail-stars">${starsHtml}</div>
+                <span>${finalRating.toFixed(1)} (${userRatings[v.name] ? 'δική σου' : 'αρχική'})</span>
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0">
+            <p><i class="fas fa-clock"></i> Ωράριο: ${v.hours || "24/7"}</p>
+            <p><i class="fas fa-phone"></i> Τηλέφωνο: ${v.phone || "—"}</p>
+            <p><i class="fab fa-instagram"></i> Instagram: ${v.insta ? `<a href="https://instagram.com/${v.insta.replace('@','')}" target="_blank" style="color:var(--accent)">@${v.insta}</a>` : "—"}</p>
+            <button onclick="startNavigation(${v.lat}, ${v.lng})" style="width:100%; padding:15px; margin:15px 0; border-radius:14px; background:var(--accent); color:#000; font-weight:bold; border:none;">
+                <i class="fas fa-location-arrow"></i> ΛΗΨΗ ΟΔΗΓΙΩΝ
+            </button>
+            <button onclick="shareVenue('${escapeHtml(v.name).replace(/'/g, "\\'")}', '${v.cat}', ${v.lat}, ${v.lng})" style="width:100%; padding:12px; margin-bottom:15px; border-radius:14px; background:var(--bg-card); border:1px solid var(--border); cursor:pointer;">
+                <i class="fas fa-share-alt"></i> Κοινοποίηση
+            </button>
+            
+            <h3 style="margin-top:30px">⭐ Βαθμολόγησε</h3>
+            <div class="stars" style="font-size: 1.5rem; gap: 8px; margin: 10px 0;">
+                ${[1,2,3,4,5].map(i => `<i class="far fa-star" data-rating="${i}" data-venuename="${escapeHtml(v.name).replace(/"/g, '&quot;')}" style="cursor:pointer; transition:0.1s;"></i>`).join('')}
+            </div>
+            
+            <h3 style="margin-top:30px">💬 Σχόλια</h3>
+            <div id="disqus_thread" style="margin-top:15px;"></div>
+        </div>
+    `;
+    
+    // Initialize Disqus
+    if (window.DISQUS) {
+        window.DISQUS.reset({ reload: true, config: function() { this.page.identifier = v.name; this.page.url = window.location.href.split('#')[0] + '#venue-' + encodeURIComponent(v.name); } });
+    } else {
+        const d = document.createElement('script');
+        d.src = `https://${DISQUS_SHORTNAME}.disqus.com/embed.js`;
+        d.setAttribute('data-timestamp', +new Date());
+        document.head.appendChild(d);
+    }
+    
+    // Attach rating stars in detail view
+    setTimeout(() => {
+        const detailStars = document.querySelectorAll('#venueDetailContent .stars i');
+        detailStars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const rating = parseInt(star.dataset.rating);
+                const name = star.dataset.venuename;
+                setVenueRating(name, rating);
+                openVenueDetail(name); // refresh detail
+            });
+        });
+    }, 100);
+}
+
+function goBackToExplore() {
+    switchView('explore');
+}
+
+// ========== RENDER EXPLORE (LIST + MAP) ==========
+let renderTimeout;
+function renderExplore() {
+    if (!venues.length) return;
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => {
+        markers.clearLayers();
+
+        const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+        const category = document.getElementById("catFilter").value;
+        const sortBy = document.getElementById("sortFilter").value;
+        const openOnly = document.getElementById("openNowCheck").checked;
+        const favOnly = document.getElementById("favoritesCheck").checked;
+
+        let filtered = venues.filter(v => {
+            if (category !== "all" && v.cat !== category) return false;
+            if (searchTerm && !v.name.toLowerCase().includes(searchTerm)) return false;
+            if (openOnly && !isOpenNow(v.hours)) return false;
+            if (favOnly && !favorites.has(v.name)) return false;
+            if (currentVibe !== "all" && v.vibe !== currentVibe) return false;
+            return true;
+        });
+
+        filtered = filtered.map(v => ({
+            ...v,
+            effectiveRating: getVenueRating(v.name, v.rating),
+            distance: userLocation ? getDistance(userLocation.lat, userLocation.lng, v.lat, v.lng) : null,
+            isHot: getVenueRating(v.name, v.rating) >= 4.2
+        }));
+
+        if (sortBy === "distance" && userLocation) filtered.sort((a,b) => (a.distance||9999) - (b.distance||9999));
+        else if (sortBy === "name") filtered.sort((a,b) => a.name.localeCompare(b.name));
+        else if (sortBy === "rating") filtered.sort((a,b) => b.effectiveRating - a.effectiveRating);
+
+        document.getElementById("resultCount").innerHTML = `${filtered.length} venues`;
+        document.getElementById("stats").innerHTML = `${venues.length} | ${filtered.length} shown`;
+
+        const listDiv = document.getElementById("list");
+        if (filtered.length === 0) {
+            listDiv.innerHTML = `<div class="empty-state"><i class="fas fa-glass-cheers fa-3x"></i><h3>Δεν βρέθηκαν αποτελέσματα</h3><button class="btn-icon" onclick="resetFilters()" style="margin-top:15px;">Επαναφορά φίλτρων</button></div>`;
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        const markerList = [];
+
+        filtered.forEach(v => {
+            const color = getCategoryColor(v.cat);
+            const iconHtml = `<i class="fas ${getCategoryIcon(v.cat)}" style="transform:rotate(45deg);color:white;font-size:12px;"></i>`;
+            const markerIcon = L.divIcon({
+                html: `<div style="background:${color};width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px ${color};">${iconHtml}</div>`,
+                iconSize: [32,32], iconAnchor: [16,32], popupAnchor: [0,-32]
+            });
+            const marker = L.marker([v.lat, v.lng], { icon: markerIcon }).bindPopup(`<b>${escapeHtml(v.name)}</b><br>⭐ ${v.effectiveRating.toFixed(1)}<br><button onclick="startNavigation(${v.lat},${v.lng})">Οδηγίες</button>`);
+            markerList.push(marker);
+
+            const isFav = favorites.has(v.name);
+            const isOpen = isOpenNow(v.hours);
+            const distanceText = v.distance ? `${v.distance.toFixed(1)}km` : '';
+            const finalRating = v.effectiveRating;
+            const vibeClass = `vibe-${v.vibe}`;
+            const isHot = v.isHot;
+
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                const cls = i <= Math.round(finalRating) ? 'fas fa-star star-filled' : 'far fa-star star-empty';
+                starsHtml += `<i class="${cls}" data-rating="${i}" data-venuename="${escapeHtml(v.name).replace(/"/g, '&quot;')}"></i>`;
+            }
+
+            const phoneButton = v.phone ? `<button class="call-btn" data-phone="${v.phone.replace(/\s/g, '')}"><i class="fas fa-phone"></i> Κλήση</button>` : '';
+            const instaButton = v.insta ? `<button class="insta-btn" data-insta="${v.insta.replace('@', '')}"><i class="fab fa-instagram"></i> IG</button>` : '';
+
+            const card = document.createElement('div');
+            card.className = `card ${isHot ? 'hot-venue' : ''}`;
+            card.setAttribute('data-name', v.name);
+            card.setAttribute('data-lat', v.lat);
+            card.setAttribute('data-lng', v.lng);
+            card.innerHTML = `
+                <div class="card-img">
+                    <img src="${v.img}" loading="lazy" onerror="this.src='https://picsum.photos/id/104/200/200'" alt="${escapeHtml(v.name)}">
+                    <div class="cat-badge" style="background:${color}">${v.cat}</div>
+                    <div class="vibe-badge ${vibeClass}">${v.vibe}</div>
+                </div>
+                <div class="card-content">
+                    <div>
+                        <div class="venue-name">${escapeHtml(v.name)}</div>
+                        <div class="venue-meta">
+                            <span><i class="fas ${getCategoryIcon(v.cat)}"></i> ${v.cat}</span>
+                            ${distanceText ? `<span><i class="fas fa-location-dot"></i> ${distanceText}</span>` : ''}
+                        </div>
+                        <div class="hours-status">
+                            <i class="fas fa-clock"></i> ${v.hours || "24/7"}
+                            <span class="open-badge ${isOpen ? 'open' : 'closed'}">${isOpen ? 'ΑΝΟΙΚΤΑ' : 'ΚΛΕΙΣΤΑ'}</span>
+                        </div>
+                        <div class="rating-area">
+                            <div class="stars">${starsHtml}</div>
+                            <span class="rating-value">${finalRating.toFixed(1)}</span>
+                        </div>
+                    </div>
+                    <div class="card-buttons">
+                        <button class="nav-btn" data-lat="${v.lat}" data-lng="${v.lng}"><i class="fas fa-location-arrow"></i> Οδηγίες</button>
+                        ${phoneButton}
+                        ${instaButton}
+                        <button class="fav-btn ${isFav ? 'active' : ''}" data-name="${escapeHtml(v.name).replace(/"/g, '&quot;')}">
+                            <i class="fas ${isFav ? 'fa-heart' : 'fa-heart-o'}"></i> ${isFav ? 'Saved' : 'Save'}
+                        </button>
+                    </div>
+                    <div style="margin-top:6px; text-align:right;">
+                        <button class="share-btn" data-name="${escapeHtml(v.name).replace(/"/g, '&quot;')}" data-cat="${v.cat}" data-lat="${v.lat}" data-lng="${v.lng}" style="background:none; border:none; color:var(--text-dim); font-size:11px; cursor:pointer;">
+                            <i class="fas fa-share-alt"></i> Κοινή
+                        </button>
+                    </div>
+                </div>
+            `;
+            fragment.appendChild(card);
+        });
+
+        markers.addLayers(markerList);
+        listDiv.innerHTML = '';
+        listDiv.appendChild(fragment);
+    }, 50);
+}
+
+// ========== EVENT DELEGATION FOR EXPLORE ==========
+document.getElementById('list')?.addEventListener('click', (e) => {
+    const card = e.target.closest('.card');
+    const btn = e.target.closest('button');
+    const star = e.target.closest('.stars i');
+
+    if (star && star.dataset.rating && star.dataset.venuename) {
+        e.stopPropagation();
+        setVenueRating(star.dataset.venuename, parseInt(star.dataset.rating));
+        return;
+    }
+
+    if (btn) {
+        e.stopPropagation();
+        if (btn.classList.contains('nav-btn')) {
+            startNavigation(btn.dataset.lat, btn.dataset.lng);
+        } else if (btn.classList.contains('call-btn')) {
+            window.location.href = `tel:${btn.dataset.phone}`;
+        } else if (btn.classList.contains('insta-btn')) {
+            window.open(`https://instagram.com/${btn.dataset.insta}`, '_blank');
+        } else if (btn.classList.contains('fav-btn')) {
+            toggleFavorite(btn.dataset.name);
+        } else if (btn.classList.contains('share-btn')) {
+            shareVenue(btn.dataset.name, btn.dataset.cat, btn.dataset.lat, btn.dataset.lng);
+        }
+    } else if (card) {
+        const venueName = card.getAttribute('data-name');
+        openVenueDetail(venueName);
+    }
+});
+
+function focusVenue(lat, lng) {
+    if (!isMapVisible) toggleMapVisibility();
+    map.setView([lat, lng], 16);
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('catFilter').value = 'all';
+    document.getElementById('sortFilter').value = 'none';
+    document.getElementById('openNowCheck').checked = false;
+    document.getElementById('favoritesCheck').checked = false;
+    currentVibe = 'all';
+    document.querySelectorAll('.vibe-btn').forEach(btn => {
+        if (btn.dataset.vibe === 'all') btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    renderExplore();
+    showToast('🧹 Φίλτρα καθαρίστηκαν');
+}
+function initVoice() {
+    const btn = document.getElementById('voiceBtn');
+    if (!btn) return;
+    if (!('webkitSpeechRecognition' in window)) { btn.style.opacity = 0.5; return; }
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'el-GR';
+    btn.addEventListener('click', () => {
+        rec.start();
+        showToast("🎤 Ακούω...");
+    });
+    rec.onresult = (e) => {
+        document.getElementById('searchInput').value = e.results[0][0].transcript;
+        renderExplore();
+    };
+}
+function initTheme() {
+    const saved = localStorage.getItem('nightlife_theme') || 'dark';
+    document.body.setAttribute('data-theme', saved);
+    document.getElementById('themeSwitch').checked = (saved === 'dark');
+    updateMapTheme(saved);
+}
+function toggleTheme() {
+    const theme = document.getElementById('themeSwitch').checked ? 'dark' : 'light';
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('nightlife_theme', theme);
+    updateMapTheme(theme);
+    showToast(theme === 'dark' ? '🌙 Dark mode' : '☀️ Light mode');
+}
+
+// ========== VIEW SWITCHING ==========
+function switchView(viewName) {
+    currentView = viewName;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`view-${viewName}`).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(item => {
+        if (item.dataset.view === viewName) item.classList.add('active');
+        else item.classList.remove('active');
+    });
+    if (viewName === 'blog') loadBlogPosts();
+    if (viewName === 'favorites') renderFavorites();
+    if (viewName === 'explore' && map) map.invalidateSize();
+}
+
+// ========== EVENT LISTENERS ==========
+let searchTimeout;
+document.getElementById('searchInput')?.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(renderExplore, 150);
+});
+document.getElementById('catFilter')?.addEventListener('change', renderExplore);
+document.getElementById('sortFilter')?.addEventListener('change', renderExplore);
+document.getElementById('openNowCheck')?.addEventListener('change', renderExplore);
+document.getElementById('favoritesCheck')?.addEventListener('change', renderExplore);
+document.getElementById('resetBtn')?.addEventListener('click', resetFilters);
+document.getElementById('hideMapBtn')?.addEventListener('click', toggleMapVisibility);
+document.getElementById('locateBtn')?.addEventListener('click', locateMe);
+document.getElementById('surpriseBtn')?.addEventListener('click', surpriseVenue);
+document.getElementById('themeSwitch')?.addEventListener('change', toggleTheme);
+
+document.getElementById('vibeSelector')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.vibe-btn');
+    if (!btn) return;
+    document.querySelectorAll('.vibe-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentVibe = btn.dataset.vibe;
+    renderExplore();
+});
+
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        switchView(item.dataset.view);
+    });
+});
+
+// ========== START ==========
+initMap();
+initTheme();
+initVoice();
+loadData();
+
+const savedMap = localStorage.getItem('mapVisible');
+if (savedMap === 'false') {
+    isMapVisible = false;
+    document.getElementById('mapWrapper').classList.add('hidden');
+    document.getElementById('mapToggleText').innerText = 'Εμφάνιση';
+}
+
+setTimeout(() => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; map.setView([userLocation.lat, userLocation.lng], 13); renderExplore(); },
+            () => {}
+        );
+    }
+}, 1500);
+
+if (!navigator.onLine) document.getElementById('offlineBanner').style.display = 'block';
+
+// Make functions global for onclick
+window.startNavigation = startNavigation;
+window.shareVenue = shareVenue;
+window.goBackToExplore = goBackToExplore;
+window.openVenueDetail = openVenueDetail;
+window.setVenueRating = setVenueRating;
+window.toggleFavorite = toggleFavorite;
+window.switchView = switchView;
+</script>
+</body>
+</html>
